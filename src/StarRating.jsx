@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PropTyes from "prop-types";
 const containerStyle = { display: "flex", alignItems: "center", gap: "20px" };
 const StarsContainerStyle = { display: "flex" };
