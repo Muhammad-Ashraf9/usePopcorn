@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react";
 import PropTyes from "prop-types";
 const containerStyle = { display: "flex", alignItems: "center", gap: "20px" };
