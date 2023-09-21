@@ -100,11 +100,9 @@ export default function App() {
           });
           if (!response.ok) throw new Error("cant fetch data.📛📛");
           const { Search: search } = await response.json();
-          console.log("search :>> ", search);
           if (!search) throw new Error("no movies with this name.🍿⛔");
           setMovies(search);
         } catch (error) {
-          console.log("error :>> ", error);
           if (error.name === "AbortError") return setError(null);
           setError(error.message);
           setMovies([]);
@@ -115,7 +113,6 @@ export default function App() {
       if (!query || query.length < 2) return;
       search();
       return function () {
-        console.log("cleanup");
         controller.abort();
       };
     },
@@ -188,7 +185,6 @@ function SelectedMovie({ selectedMovieId, onUnselect, onWatch, watched }) {
   const [rating, setRating] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  console.log("onUnselect :>> ", onUnselect);
   function handleSetRating(rating) {
     setRating(rating);
   }
@@ -198,7 +194,6 @@ function SelectedMovie({ selectedMovieId, onUnselect, onWatch, watched }) {
       const response = await fetch(`${url}i=${selectedMovieId}`);
       if (!response.ok) throw new Error("cant get movie details📛📛");
       const data = await response.json();
-      console.log("data :>> ", data);
       setMovie(data);
       setIsLoading(false);
     }
@@ -211,68 +206,100 @@ function SelectedMovie({ selectedMovieId, onUnselect, onWatch, watched }) {
     };
   }, [movie]);
   if (!movie) return;
-  console.log("movie.runtime :>> ", Number(movie.Runtime.split(" ")[0]));
   const isWatched = watched.some(
     (watchedMovie) => watchedMovie.imdbID === movie.imdbID
   );
   const selectedMovie = watched.find(
     (watchedMovie) => watchedMovie.imdbID === movie.imdbID
   );
-  const isRated = rating !== 0;
-  console.log("isRated, watched :>> ", isRated, watched);
-  // const {
-  //   Actors: actors,
-  //   Awards: awards,
-  //   BoxOffice: boxOffice,
-  //   Country: country,
-  //   DVD: dvd,
-  //   Director: director,
-  //   Genre: genre,
-  //   Language: language,
-  //   Metascore: metascore,
-  //   Plot: plot,
-  //   Poster: poster,
-  //   Production: production,
-  //   Rated: rated,
-  //   Ratings: [internetMovieDatabase, rottenTomatoes, metacritic],
-  //   Released: released,
-  //   Response: response,
-  //   Runtime: runtime,
-  //   Title: title,
-  //   Type: type,
-  //   Website: website,
-  //   Writer: writer,
-  //   Year: year,
-  //   imdbID,
-  //   imdbRating,
-  //   imdbVotes,
-  // } = movie;
+
+  const {
+    Actors: actors,
+    Awards: awards,
+    BoxOffice: boxOffice,
+    Country: country,
+    DVD: dvd,
+    Director: director,
+    Genre: genre,
+    Language: language,
+    Metascore: metascore,
+    Plot: plot,
+    Poster: poster,
+    Production: production,
+    Rated: rated,
+    Ratings: [internetMovieDatabase, rottenTomatoes, metacritic],
+    Released: released,
+    Response: response,
+    Runtime: runtime,
+    Title: title,
+    Type: type,
+    Website: website,
+    Writer: writer,
+    Year: year,
+    imdbID,
+    imdbRating,
+    imdbVotes,
+  } = movie;
 
   return (
     <>
-      {isLoading ? (
-        <Loader />
-      ) : (
-        <>
-          <button onClick={onUnselect}>&larr;</button>
-          <p>{movie.Title}</p>
-          {!isWatched && (
-            <StarRating
-              maxRating={10}
-              size={24}
-              onSetRating={handleSetRating}
-            />
-          )}
-          {isRated && !isWatched && (
-            <button onClick={() => onWatch({ ...movie, userRating: rating })}>
-              add to list
-            </button>
-          )}
-          {isWatched && (
-            <p>you rated this movie {selectedMovie.userRating} ⭐</p>
-          )}
-        </>
-      )}
+      <div className="details">
+        {isLoading ? (
+          <Loader />
+        ) : (
+          <>
+            <header>
+              <button className="btn-back" onClick={onUnselect}>
+                &larr;
+              </button>
+              <img src={poster} alt={`Poster of ${movie} movie`} />
+              <div className="details-overview">
+                <h2>{title}</h2>
+                <p>
+                  {released} &bull; {runtime}
+                </p>
+                <p>{genre}</p>
+                <p>
+                  <span>⭐️</span>
+                  {imdbRating} IMDb rating
+                </p>
+              </div>
+            </header>
+            <section>
+              <div className="rating">
+                {!isWatched ? (
+                  <>
+                    <StarRating
+                      maxRating={10}
+                      size={24}
+                      onSetRating={handleSetRating}
+                    />
+                    {rating > 0 && (
+                      <button
+                        className="btn-add"
+                        onClick={() =>
+                          onWatch({ ...movie, userRating: rating })
+                        }
+                      >
+                        + Add to list
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <p>
+                    You rated with movie {watchedUserRating} <span>⭐️</span>
+                  </p>
+                )}
+              </div>
+              <p>
+                <em>{plot}</em>
+              </p>
+              <p>Starring {actors}</p>
+              <p>Directed by {director}</p>
+            </section>
+          </>
+        )}
+      </div>
     </>
   );
 }
@@ -366,7 +393,9 @@ function WatchedMovie({ movie, onRemove }) {
           <span>{movie.Runtime}</span>
         </p>
       </div>
-      <button onClick={() => onRemove(movie.imdbID)}>❌</button>
+      <button className="btn-delete" onClick={() => onRemove(movie.imdbID)}>
+        X
+      </button>
     </li>
   );
 }
