@@ -1,57 +1,48 @@
-import { useRef } from "react";
-import { useEffect } from "react";
 import { useState } from "react";
 
-function useGeolocation(element, event) {
+function useGeolocation() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [position, setPosition] = useState({});
 
-  useEffect(
-    function () {
-      function callback(e) {
-        console.log(e.target, element);
-        if (e.target !== element) return;
-        if (!navigator.geolocation)
-          return setError("Your browser does not support geolocation");
+  function getPostion() {
+    if (!navigator.geolocation)
+      return setError("Your browser does not support geolocation");
 
-        setIsLoading(true);
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setPosition({
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-            });
-            setIsLoading(false);
-          },
-          (error) => {
-            setError(error.message);
-            setIsLoading(false);
-          }
-        );
+    setIsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPosition({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setIsLoading(false);
+      },
+      (error) => {
+        setError(error.message);
+        setIsLoading(false);
       }
-      document.addEventListener(event, callback);
-    },
+    );
+  }
 
-    [element, event]
-  );
-  return { error, position, isLoading };
+  return { error, position, isLoading, getPostion };
 }
 
 export default function App() {
   const [countClicks, setCountClicks] = useState(0);
-  const btnEl = useRef(null);
   const {
     error,
     position: { lat, lng },
     isLoading,
-  } = useGeolocation(btnEl.current, "click");
+    getPostion,
+  } = useGeolocation();
   function handleGetPostion() {
     setCountClicks((c) => c + 1);
+    getPostion();
   }
   return (
     <div>
-      <button onClick={handleGetPostion} disabled={isLoading} ref={btnEl}>
+      <button onClick={handleGetPostion} disabled={isLoading}>
         Get my position
       </button>
 
