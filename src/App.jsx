@@ -51,15 +51,19 @@ const tempWatchedData = [
     userRating: 9,
   },
 ];
-
+// N/A runtime case => isNaN(cur) ? cur : acc + cur / arr.length
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
-function ErrorMessage({ children }) {
-  return <p>{children}</p>;
+function ErrorMessage({ message }) {
+  return (
+    <p className="error">
+      <span>⛔️</span> {message}
+    </p>
+  );
 }
 function Loader() {
-  return <p>loading...⏳</p>;
+  return <p className="loader">loading...⏳</p>;
 }
 export default function App() {
   const [movies, setMovies] = useState([]);
@@ -98,9 +102,9 @@ export default function App() {
           const response = await fetch(`${url}s=${query}`, {
             signal: controller.signal,
           });
-          if (!response.ok) throw new Error("cant fetch data.📛📛");
+          if (!response.ok) throw new Error("cant fetch data.");
           const { Search: search } = await response.json();
-          if (!search) throw new Error("no movies with this name.🍿⛔");
+          if (!search) throw new Error("no movies with this name.");
           setMovies(search);
         } catch (error) {
           if (error.name === "AbortError") return setError(null);
@@ -181,65 +185,61 @@ function WatchedMoviesList({
   );
 }
 function SelectedMovie({ selectedMovieId, onUnselect, onWatch, watched }) {
-  const [movie, setMovie] = useState(null);
+  const [movie, setMovie] = useState({});
   const [rating, setRating] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    Actors: actors,
+    Director: director,
+    Genre: genre,
+    Plot: plot,
+    Poster: poster,
+    Released: released,
+    Runtime: runtime,
+    Title: title,
+    imdbID,
+    imdbRating,
+  } = movie;
+  const watchedMovie = watched.find(
+    (watchedMovie) => watchedMovie.imdbID === imdbID
+  );
+  const watchedUserRating = watchedMovie?.userRating;
 
   function handleSetRating(rating) {
     setRating(rating);
   }
-  useEffect(() => {
-    async function search() {
-      setIsLoading(true);
-      const response = await fetch(`${url}i=${selectedMovieId}`);
-      if (!response.ok) throw new Error("cant get movie details📛📛");
-      const data = await response.json();
-      setMovie(data);
-      setIsLoading(false);
-    }
-    search();
-  }, [selectedMovieId]);
+  function handleAddToList() {
+    const newMovie = {
+      poster,
+      runtime,
+      title,
+      imdbID,
+      imdbRating,
+      userRating: rating,
+    };
+    onWatch(newMovie);
+  }
+  useEffect(
+    function () {
+      async function search() {
+        setIsLoading(true);
+        const response = await fetch(`${url}i=${selectedMovieId}`);
+        if (!response.ok) throw new Error("cant get movie details📛📛");
+        const data = await response.json();
+        setMovie(data);
+        setIsLoading(false);
+      }
+      search();
+    },
+    [selectedMovieId]
+  );
   useEffect(() => {
     if (movie) document.title = `Movie | ${movie.Title}`;
     return () => {
       document.title = "usePopcorn";
     };
   }, [movie]);
-  if (!movie) return;
-  const isWatched = watched.some(
-    (watchedMovie) => watchedMovie.imdbID === movie.imdbID
-  );
-  const selectedMovie = watched.find(
-    (watchedMovie) => watchedMovie.imdbID === movie.imdbID
-  );
-
-  const {
-    Actors: actors,
-    Awards: awards,
-    BoxOffice: boxOffice,
-    Country: country,
-    DVD: dvd,
-    Director: director,
-    Genre: genre,
-    Language: language,
-    Metascore: metascore,
-    Plot: plot,
-    Poster: poster,
-    Production: production,
-    Rated: rated,
-    Ratings: [internetMovieDatabase, rottenTomatoes, metacritic],
-    Released: released,
-    Response: response,
-    Runtime: runtime,
-    Title: title,
-    Type: type,
-    Website: website,
-    Writer: writer,
-    Year: year,
-    imdbID,
-    imdbRating,
-    imdbVotes,
-  } = movie;
 
   return (
     <>
@@ -267,7 +267,7 @@ function SelectedMovie({ selectedMovieId, onUnselect, onWatch, watched }) {
             </header>
             <section>
               <div className="rating">
-                {!isWatched ? (
+                {!watchedMovie ? (
                   <>
                     <StarRating
                       maxRating={10}
@@ -275,12 +275,7 @@ function SelectedMovie({ selectedMovieId, onUnselect, onWatch, watched }) {
                       onSetRating={handleSetRating}
                     />
                     {rating > 0 && (
-                      <button
-                        className="btn-add"
-                        onClick={() =>
-                          onWatch({ ...movie, userRating: rating })
-                        }
-                      >
+                      <button className="btn-add" onClick={handleAddToList}>
                         + Add to list
                       </button>
                     )}
@@ -307,7 +302,7 @@ function Summary({ watched }) {
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
   const avgUserRating = average(watched.map((movie) => movie.userRating));
   const avgRuntime = average(
-    watched.map((movie) => Number(movie.Runtime.split(" ")[0]))
+    watched.map((movie) => Number(movie.runtime.split(" ")[0]))
   );
 
   return (
@@ -356,7 +351,7 @@ function MoviesList({ movies, isLoading, error, onSelect }) {
           <Movie onSelect={onSelect} key={movie.imdbID} movie={movie} />
         ))
       )}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && <ErrorMessage message={error} />}
     </ul>
   );
 }
@@ -377,8 +372,8 @@ function Movie({ movie, onSelect }) {
 function WatchedMovie({ movie, onRemove }) {
   return (
     <li key={movie.imdbID}>
-      <img src={movie.Poster} alt={`${movie.Title} poster`} />
-      <h3>{movie.Title}</h3>
+      <img src={movie.poster} alt={`${movie.title} poster`} />
+      <h3>{movie.title}</h3>
       <div>
         <p>
           <span>⭐️</span>
@@ -390,7 +385,7 @@ function WatchedMovie({ movie, onRemove }) {
         </p>
         <p>
           <span>⏳</span>
-          <span>{movie.Runtime}</span>
+          <span>{movie.runtime}</span>
         </p>
       </div>
       <button className="btn-delete" onClick={() => onRemove(movie.imdbID)}>
