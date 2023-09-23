@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { useState } from "react";
 
-export function useLocalStorage(key) {
+export function useLocalStorage(initialState, key) {
   const [value, setValue] = useState(function () {
     const watchedList = localStorage.getItem(key);
-    return watchedList ? JSON.parse(watchedList) : [];
+    return watchedList ? JSON.parse(watchedList) : initialState;
   });
   useEffect(
     function () {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PropTyes from "prop-types";
 
 export default function TextExpander({

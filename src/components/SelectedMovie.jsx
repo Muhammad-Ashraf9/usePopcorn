@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import StarRating from "../StarRating";
+import StarRating from "./StarRating";
 import { Loader } from "./Loader";
 import { url } from "./App";
 import { useKey } from "../hooks/useKey";
@@ -45,15 +45,6 @@ export function SelectedMovie({
     };
     onWatch(newMovie);
   }
-  // useEffect(function () {
-  //   function callback(e) {
-  //     console.log("e :>> ", e);
-  //     if (e.key !== "Escape") return;
-  //     onUnselect();
-  //   }
-  //   document.addEventListener("keydown", callback);
-  //   return () => document.removeEventListener("keydown", callback);
-  // }, []);
   useKey("Escape", onUnselect);
   useEffect(
     function () {
