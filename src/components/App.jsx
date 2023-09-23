@@ -8,15 +8,13 @@ import { MoviesList } from "./MoviesList";
 import { Nav } from "./Nav";
 import { Search } from "./Search";
 import { NumberOfResults } from "./NumberOfResults";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 const apiKey = "a6c1a1f6";
 export const url = `http://www.omdbapi.com/?apikey=${apiKey}&`;
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState(function () {
-    const watchedList = localStorage.getItem("watched");
-    return watchedList ? JSON.parse(watchedList) : [];
-  });
+  const [watched, setWatched] = useLocalStorage("watched");
   const [query, setQuery] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,10 +23,7 @@ export default function App() {
     setSelectedMovieId((prevMovieId) => (id === prevMovieId ? null : id));
   }
   function handleAddToWatchedList(movie) {
-    setWatched((prevMovies) => {
-      localStorage.setItem("watched", JSON.stringify([...prevMovies, movie]));
-      return [...prevMovies, movie];
-    });
+    setWatched((prevMovies) => [...prevMovies, movie]);
     handleUnselect();
   }
   function handleUnselect() {
@@ -42,6 +37,7 @@ export default function App() {
       prevWatchedList.filter((movie) => movie.imdbID !== movieId)
     );
   }
+
   //try eventlistener after keyup 2sec
   useEffect(
     function () {
